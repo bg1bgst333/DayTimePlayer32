@@ -1,7 +1,9 @@
 // ヘッダのインクルード
 // 既定のヘッダ
+#include <string.h>		// C文字列処理
 #include <tchar.h>		// TCHAR型
 #include <windows.h>	// 標準WindowsAPI
+#include <mmsystem.h>	// マルチメディア
 // 独自のヘッダ
 #include "resource.h"	// リソース
 
@@ -69,6 +71,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 	// スタティック変数の初期化.
 	static HWND hStatic = NULL;	// スタティックコントロールのウィンドウハンドルhStaticをNULLで初期化.
+	static HWND hButton = NULL;	// ボタンコントロールのウィンドウハンドルhButtonをNULLで初期化.
+	static TCHAR tszSelectedPath[_MAX_PATH] = {0};	// 選択されたパスtszSelectedPathを{0}で初期化.
 
 	// ウィンドウメッセージの処理.
 	switch (uMsg){	// uMsgの値ごとに処理を振り分ける.
@@ -87,6 +91,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 				// スタティックコントロールの作成
 				hStatic = CreateWindow(_T("Static"), _T("---"), WS_CHILD | WS_VISIBLE | SS_SIMPLE, 0, 0, 640, 50, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでスタティックコントロールhStaticを作成.(ウィンドウクラス名は"Static".)
+
+				// ボタンコントロールの作成
+				hButton = CreateWindow(_T("Button"), _T("再生"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 50, 100, 50, hwnd, (HMENU)(WM_APP + 2), lpCS->hInstance, NULL);	// CreateWindowでボタンコントロールhButtonを作成.(ウィンドウクラス名は"Button".)
 
 				// 常にウィンドウ作成に成功するものとする.
 				return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
@@ -144,8 +151,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 								TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
 								GetFileTitle(tszPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
 								SetWindowText(hStatic, tszTitle);	// SetWindowTextでtszTitleをhStaticにセット.
+								wmemset(tszSelectedPath, _T('\0'), _MAX_PATH);	// tszSelectedPathを_T('\0')で埋める.
+								_tcscpy(tszSelectedPath, tszPath);	// tszSelectedPathにtszPathをコピー.
+								InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで更新.
 
 							}
+							else{	// キャンセルの場合.
+
+								// 元のタイトルを表示.
+								TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
+								GetFileTitle(tszSelectedPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
+								SetWindowText(hStatic, tszTitle);	// SetWindowTextでtszTitleをhStaticにセット.
+
+							}
+
+						}
+
+						// 既定の処理へ向かう.
+						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+
+					// "再生"ボタン
+					case WM_APP + 2:
+
+						// WM_APP + 2ブロック
+						{
+
+							// 選択された音声ファイルを再生.
+							PlaySound(tszSelectedPath, NULL, SND_FILENAME | SND_ASYNC);	// PlaySoundでtszSelectedPathを再生.
 
 						}
 
