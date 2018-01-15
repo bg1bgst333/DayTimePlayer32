@@ -1,211 +1,26 @@
 // ヘッダのインクルード
-// 既定のヘッダ
-#include <string.h>		// C文字列処理
-#include <tchar.h>		// TCHAR型
-#include <windows.h>	// 標準WindowsAPI
-#include <mmsystem.h>	// マルチメディア
 // 独自のヘッダ
-#include "resource.h"	// リソース
-
-// 関数のプロトタイプ宣言
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);	// ウィンドウプロシージャWindowProc
+#include "MainApplication.h"	// CMainApplication
 
 // _tWinMain関数の定義
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd){
 
-	// 変数・構造体の宣言
-	HWND hWnd;		// HWND型ウィンドウハンドルhWnd
-	MSG msg;		// MSG型メッセージ構造体msg
-	WNDCLASS wc;	// WNDCLASS型ウィンドウクラス構造体wc
+	// オブジェクトの宣言.
+	CMainApplication app;	// CMainApplicationオブジェクトapp.
 
-	// ウィンドウクラス構造体wcにパラメータをセット.
-	wc.lpszClassName = _T("DayTimePlayer");	// ウィンドウクラス名はとりあえず"DayTimePlayer"とする.
-	wc.style = CS_HREDRAW | CS_VREDRAW;	// スタイルはとりあえずCS_HREDRAW | CS_VREDRAWにする.
-	wc.lpfnWndProc = WindowProc;	// ウィンドウプロシージャには下で定義するWindowProcを指定する.
-	wc.hInstance = hInstance;	// アプリケーションインスタンスハンドルは引数のhInstanceを使う.
-	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);	// LoadIconでアプリケーション既定のアイコンをロード.
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);	// LoadCursorでアプリケーション既定のカーソルをロード.
-	wc.hbrBackground = (HBRUSH)GetStockObject(LTGRAY_BRUSH);	// GetStockObjectでライトグレーブラシを背景色とする.
-	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);	// MAKEINTRESOURCEにメニューのリソースID(IDR_MENU1)を指定し, wc.lpszMenuNameに格納.
-	wc.cbClsExtra = 0;	// とりあえず0を指定.
-	wc.cbWndExtra = 0;	// とりあえず0を指定.
+	// インスタンスの初期化.
+	if (!app.InitInstance(hInstance, lpCmdLine, nShowCmd)){	// app.InitInstanceがFALSEの場合.
 
-	// ウィンドウクラスの登録
-	if (!RegisterClass(&wc)){	// RegisterClassでウィンドウクラスを登録する.
-
-		// 戻り値が0なら登録失敗なのでエラー処理.
-		MessageBox(NULL, _T("予期せぬエラーが発生しました!(-1)"), _T("DayTimePlayer"), MB_OK | MB_ICONHAND);	// MessageBoxで"予期せぬエラーが発生しました!(-1)"と表示.
+		// 異常終了.
+		app.ExitInstance();	// app.ExitInstanceで終了処理を実行.
 		return -1;	// returnで-1を返して異常終了.
 
 	}
 
-	// ウィンドウの作成
-	hWnd = CreateWindow(wc.lpszClassName, _T("DayTimePlayer"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);	// CreateWindowでウィンドウクラス名が"DayTimePlayer"なウィンドウ"DayTimePlayer"を作成.
-	if (hWnd == NULL){	// hWndがNULLならウィンドウ作成失敗.
+	// メッセージループ.
+	int iRet = app.Run();	// app.Runでメッセージループに入り, 戻り値をiRetに格納.
 
-		// エラー処理
-		MessageBox(NULL, _T("予期せぬエラーが発生しました!(-2)"), _T("DayTimePlayer"), MB_OK | MB_ICONHAND);	// MessageBoxで"予期せぬエラーが発生しました!(-2)"と表示.
-		return -2;	// returnで-2を返して異常終了.
-
-	}
-
-	// ウィンドウの表示
-	ShowWindow(hWnd, SW_SHOW);	// ShowWindowでウィンドウを表示.
-
-	// メッセージループの処理
-	while (GetMessage(&msg, NULL, 0, 0) > 0){	// GetMessageでウィンドウメッセージを取得し, msgに格納.(0以下なら, ここを抜ける.)
-
-		// メッセージの変換と送出.
-		TranslateMessage(&msg);	// TranslateMessageで仮想キーメッセージを文字メッセージへ変換.
-		DispatchMessage(&msg);	// DispatchMessageでメッセージをウィンドウプロシージャWindowProcに送出.
-
-	}
-
-	// プログラムの終了
-	return (int)msg.wParam;	// 終了コード(msg.wParam)を戻り値として返す.
-
-}
-
-// ウィンドウプロシージャWindowProcの定義
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-
-	// スタティック変数の初期化.
-	static HWND hStatic = NULL;	// スタティックコントロールのウィンドウハンドルhStaticをNULLで初期化.
-	static HWND hButton = NULL;	// ボタンコントロールのウィンドウハンドルhButtonをNULLで初期化.
-	static TCHAR tszSelectedPath[_MAX_PATH] = {0};	// 選択されたパスtszSelectedPathを{0}で初期化.
-
-	// ウィンドウメッセージの処理.
-	switch (uMsg){	// uMsgの値ごとに処理を振り分ける.
-
-		// ウィンドウの作成が開始された時.
-		case WM_CREATE:
-
-			// WM_CREATEブロック
-			{
-
-				// 変数の宣言
-				LPCREATESTRUCT lpCS;	// CreateStruct構造体ポインタlpCS.
-
-				// lpCSの取得.
-				lpCS = (LPCREATESTRUCT)lParam;	// lParamをLPCREATESTRUCTにキャストして, lpCSに格納.
-
-				// スタティックコントロールの作成
-				hStatic = CreateWindow(_T("Static"), _T("---"), WS_CHILD | WS_VISIBLE | SS_SIMPLE, 0, 0, 640, 50, hwnd, (HMENU)(WM_APP + 1), lpCS->hInstance, NULL);	// CreateWindowでスタティックコントロールhStaticを作成.(ウィンドウクラス名は"Static".)
-
-				// ボタンコントロールの作成
-				hButton = CreateWindow(_T("Button"), _T("再生"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 50, 100, 50, hwnd, (HMENU)(WM_APP + 2), lpCS->hInstance, NULL);	// CreateWindowでボタンコントロールhButtonを作成.(ウィンドウクラス名は"Button".)
-
-				// 常にウィンドウ作成に成功するものとする.
-				return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// ウィンドウが破棄された時.
-		case WM_DESTROY:
-
-			// WM_DESTROYブロック
-			{
-
-				// 終了メッセージの送信.
-				PostQuitMessage(0);	// PostQuitMessageで終了コードを0としてWM_QUITメッセージを送信.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// コマンドが発生した時.
-		case WM_COMMAND:
-
-			// WM_COMMANDブロック
-			{
-
-				// コマンドの処理.
-				switch (LOWORD(wParam)){	// LOWORD(wParam)でリソースIDがわかるので, その値ごとに処理を振り分ける.
-
-					// "開く(&O)..."
-					case ID_FILE_OPEN:
-
-						// ID_FILE_OPENブロック
-						{
-
-							// "開く"ファイルの選択.
-							// 構造体・配列の初期化.
-							OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
-							TCHAR tszPath[_MAX_PATH] = {0};	// ファイルパスtszPathを{0}で初期化.
-							// パラメータのセット.
-							ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
-							ofn.hwndOwner = hwnd;	// hwndをセット.
-							ofn.lpstrFilter = _T("音声ファイル(*.wav)\0*.wav\0すべてのファイル(*.*)\0*.*\0\0");	// 音声ファイルとすべてのファイルのフィルタをセット.
-							ofn.lpstrFile = tszPath;	// tszPathをセット.
-							ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
-							ofn.Flags = OFN_FILEMUSTEXIST;	// ファイルが存在しないと抜けられない.
-							// "開く"ファイルダイアログの表示.
-							BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
-							if (bRet){	// 正常に選択された.
-								
-								// 選択されたファイル名を表示.
-								TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
-								GetFileTitle(tszPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
-								SetWindowText(hStatic, tszTitle);	// SetWindowTextでtszTitleをhStaticにセット.
-								wmemset(tszSelectedPath, _T('\0'), _MAX_PATH);	// tszSelectedPathを_T('\0')で埋める.
-								_tcscpy(tszSelectedPath, tszPath);	// tszSelectedPathにtszPathをコピー.
-								InvalidateRect(hwnd, NULL, TRUE);	// InvalidateRectで更新.
-
-							}
-							else{	// キャンセルの場合.
-
-								// 元のタイトルを表示.
-								TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
-								GetFileTitle(tszSelectedPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
-								SetWindowText(hStatic, tszTitle);	// SetWindowTextでtszTitleをhStaticにセット.
-
-							}
-
-						}
-
-						// 既定の処理へ向かう.
-						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-					// "再生"ボタン
-					case WM_APP + 2:
-
-						// WM_APP + 2ブロック
-						{
-
-							// 選択された音声ファイルを再生.
-							PlaySound(tszSelectedPath, NULL, SND_FILENAME | SND_ASYNC);	// PlaySoundでtszSelectedPathを再生.
-
-						}
-
-						// 既定の処理へ向かう.
-						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-					// それ以外.
-					default:
-
-						// 既定の処理へ向かう.
-						break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-				}
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// 上記以外の時.
-		default:
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-	}
-
-	// あとは既定の処理に任せる.
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);	// 戻り値も含めてDefWindowProcに既定の処理を任せる.
+	// 正常終了.
+	return iRet;	// iRetを返す.
 
 }
