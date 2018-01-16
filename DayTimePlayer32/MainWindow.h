@@ -6,6 +6,8 @@
 // 既定のヘッダ
 #include <string>	// std::string
 // 独自のヘッダ
+#include "Static.h"	// CStatic
+#include "Button.h"	// CButton
 #include "Window.h"	// CWindow
 
 // マクロの定義
@@ -23,10 +25,10 @@ class CMainWindow : public CWindow{
 	private:
 
 		// privateメンバ変数
-		HWND m_hStatic;	// スタティックコントロールハンドル.
-		HWND m_hButton;	// ボタンコントロール.
 		tstring m_tstrCurrentFileName;	// 現在選択しているファイル名.(フルパス)
 		tstring m_tstrCurrentFileNameTitle;	// 現在選択しているファイル名.(フルパスの中のファイル名部分だけ.)
+		CStatic *m_pStatic;	// CStaticオブジェクトポインタm_pStatic.
+		CButton *m_pButton;	// CButtonオブジェクトポインタm_pButton.
 
 	// publicメンバ
 	public:

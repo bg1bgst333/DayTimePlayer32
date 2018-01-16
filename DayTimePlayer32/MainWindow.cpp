@@ -7,10 +7,10 @@
 CMainWindow::CMainWindow() : CWindow(){
 
 	// メンバの初期化.
-	m_hStatic = NULL;	// m_hStaticをNULLで初期化.
-	m_hButton = NULL;	// m_hButtonをNULLで初期化.
 	m_tstrCurrentFileName.clear();	// m_tstrCurrentFileName.clearでクリア.
 	m_tstrCurrentFileNameTitle.clear();	// m_tstrCurrentFileName.clearでクリア.
+	m_pStatic = NULL;	// m_pStaticをNULLで初期化.
+	m_pButton = NULL;	// m_pButtonをNULLで初期化.
 
 }
 
@@ -18,16 +18,16 @@ CMainWindow::CMainWindow() : CWindow(){
 CMainWindow::~CMainWindow(){
 
 	// メンバの終了処理.
-	if (m_hStatic != NULL){	// m_hStaticがNULLでない時.
-		DestroyWindow(m_hStatic);	// DestroyWindowでm_hStaticを破棄.
-		m_hStatic = NULL;	// m_hStaicにNULLをセット.
-	}
-	if (m_hButton != NULL){	// m_hButtonがNULLでない時.
-		DestroyWindow(m_hButton);	// DestroyWindowでm_hButtonを破棄.
-		m_hButton = NULL;	// m_hButtonにNULLをセット.
-	}
 	m_tstrCurrentFileName.clear();	// m_tstrCurrentFileName.clearでクリア.
 	m_tstrCurrentFileNameTitle.clear();	// m_tstrCurrentFileName.clearでクリア.
+	if (m_pStatic != NULL){	// m_pStaticがNULLでなければ.
+		delete m_pStatic;	// deleteでm_pStaticを解放.
+		m_pStatic = NULL;	// m_pStaticにNULLをセット.
+	}
+	if (m_pButton != NULL){	// m_pButtonがNULLでなければ.
+		delete m_pButton;	// deleteでm_pButtonを解放.
+		m_pButton = NULL;	// m_pButtonにNULLをセット.
+	}
 
 }
 
@@ -50,11 +50,17 @@ BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, 
 // ウィンドウの作成が開始された時.
 int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 
-	// スタティックコントロールの作成
-	m_hStatic = CreateWindow(_T("Static"), _T("---"), WS_CHILD | WS_VISIBLE | SS_SIMPLE, 0, 0, 640, 50, hwnd, (HMENU)(WM_APP + 1), lpCreateStruct->hInstance, NULL);	// CreateWindowでスタティックコントロールm_hStaticを作成.(ウィンドウクラス名は"Static".)
+	// スタティックコントロールオブジェクトの作成
+	m_pStatic = new CStatic();	// CStaticオブジェクトの作成.
 
-	// ボタンコントロールの作成
-	m_hButton = CreateWindow(_T("Button"), _T("再生"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 50, 100, 50, hwnd, (HMENU)(WM_APP + 2), lpCreateStruct->hInstance, NULL);	// CreateWindowでボタンコントロールm_hButtonを作成.(ウィンドウクラス名は"Button".)
+	// スタティックコントロールのウィンドウ作成.
+	m_pStatic->Create(_T("---"), SS_SIMPLE, 0, 0, 640, 50, hwnd, (HMENU)(WM_APP + 1), lpCreateStruct->hInstance);	// m_pStatic->Createで作成.
+
+	// ボタンコントロールオブジェクトの作成
+	m_pButton = new CButton();	// CButtonオブジェクトの作成.
+
+	// ボタンコントロールのウィンドウ作成.
+	m_pButton->Create(_T("再生"), BS_PUSHBUTTON, 0, 50, 100, 50, hwnd, (HMENU)(WM_APP + 2), lpCreateStruct->hInstance);	// m_pButton->Createで作成.
 
 	// 常にウィンドウ作成に成功するものとする.
 	return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
@@ -101,14 +107,14 @@ BOOL CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam){
 					TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
 					GetFileTitle(tszPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
 					m_tstrCurrentFileNameTitle = tszTitle;	// m_tstrCurrentFileNameTitleにtszTitleをセット.
-					SetWindowText(m_hStatic, m_tstrCurrentFileNameTitle.c_str());	// SetWindowTextでm_hStaticにm_tstrCurrentFileNameTitleをセット.
+					m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
 					InvalidateRect(m_hWnd, NULL, TRUE);	// InvalidateRectで更新.
 
 				}
 				else{	// キャンセルの場合.
 
 					// 元のタイトルを表示.
-					SetWindowText(m_hStatic, m_tstrCurrentFileNameTitle.c_str());	// SetWindowTextでm_hStaticにm_tstrCurrentFileNameTitleをセット.
+					m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
 
 				}
 
