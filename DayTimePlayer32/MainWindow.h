@@ -39,6 +39,7 @@ class CMainWindow : public CMenuWindow{
 		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpszMenuName);	// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
 		// メンバ関数
 		virtual BOOL Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance);	// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
+		void SetCurrentFileName(LPCTSTR lpctszFileName);	// ファイル読み書きしたら, これでファイルパスをセット.
 		virtual int OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);	// ウィンドウの作成が開始された時.
 		virtual void OnDestroy();	// ウィンドウが破棄された時.
 		virtual int OnFileOpen(WPARAM wParam, LPARAM lParam);	// "開く"を選択された時のハンドラ.

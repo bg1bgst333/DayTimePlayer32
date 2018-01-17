@@ -58,6 +58,25 @@ BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, 
 
 }
 
+// ファイル読み書きしたら, これでファイルパスをセット.
+void CMainWindow::SetCurrentFileName(LPCTSTR lpctszFileName){
+
+	// ファイルパスをセット.
+	m_tstrCurrentFileName = lpctszFileName;	// m_tstrCurrentFileNameにlpctszFileNameをセット.
+
+	// ファイルタイトルの取得とセット.
+	TCHAR tszFileNameTitle[_MAX_PATH] = {0};	// ファイル名の部分だけを格納するtszFileNameTitleを{0}で初期化.
+	GetFileTitle(lpctszFileName, tszFileNameTitle, _MAX_PATH);	// GetFileTitleでファイルタイトル取得.
+	m_tstrCurrentFileNameTitle = tszFileNameTitle;	// m_tstrCurrentFileNameTitleにtszFileNameTitleをセット.
+
+	// ウィンドウのタイトルにファイル名を表示する.
+	tstring tstrNewWindowTitle;	// 新しいウィンドウのタイトルtstrNewWindowTitle.
+	tstrNewWindowTitle = m_tstrCurrentFileNameTitle;	// ファイルタイトルをセット.
+	tstrNewWindowTitle = tstrNewWindowTitle + _T(" - DayTimePlayer");	// " - DayTimePlayer"を連結.
+	SetText(tstrNewWindowTitle.c_str());	// SetTextでtstrNewWindowTitleをセット.
+
+}
+
 // ウィンドウの作成が開始された時.
 int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 
@@ -121,21 +140,12 @@ int CMainWindow::OnFileOpen(WPARAM wParam, LPARAM lParam){
 	if (selDlg.ShowOpenFileDialog(m_hWnd)){	// selDlg.ShowOpenFileDialogで"開く"ファイルダイアログを表示.
 		
 		// 選択されたファイル名を表示.
-		m_tstrCurrentFileName = selDlg.m_tstrPath;	// m_tstrCurrentFileNameにselDlg.m_tstrPathをセット.
-		TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
-		GetFileTitle(selDlg.m_tstrPath.c_str(), tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
-		m_tstrCurrentFileNameTitle = tszTitle;	// m_tstrCurrentFileNameTitleにtszTitleをセット.
+		SetCurrentFileName(selDlg.m_tstrPath.c_str());	// SetCurrentFileNameでselDlg.m_tstrPathをセット.
 		m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
 		InvalidateRect(m_hWnd, NULL, TRUE);	// InvalidateRectで更新.
 
 		// 処理したので0を返す.
 		return 0;	// 0を返す.
-
-	}
-	else{	// キャンセルの場合.
-
-		// 元のタイトルを表示.
-		m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
 
 	}
 
