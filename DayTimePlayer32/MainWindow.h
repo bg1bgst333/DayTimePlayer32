@@ -8,7 +8,7 @@
 // 独自のヘッダ
 #include "Static.h"	// CStatic
 #include "Button.h"	// CButton
-#include "Window.h"	// CWindow
+#include "MenuWindow.h"	// CMenuWindow
 
 // マクロの定義
 // UNICODE切り替え
@@ -19,19 +19,16 @@
 #endif
 
 // メインウィンドウクラスCMainWindow
-class CMainWindow : public CWindow{
+class CMainWindow : public CMenuWindow{
 
-	// privateメンバ
-	private:
+	// publicメンバ
+	public:
 
-		// privateメンバ変数
+		// publicメンバ変数
 		tstring m_tstrCurrentFileName;	// 現在選択しているファイル名.(フルパス)
 		tstring m_tstrCurrentFileNameTitle;	// 現在選択しているファイル名.(フルパスの中のファイル名部分だけ.)
 		CStatic *m_pStatic;	// CStaticオブジェクトポインタm_pStatic.
 		CButton *m_pButton;	// CButtonオブジェクトポインタm_pButton.
-
-	// publicメンバ
-	public:
 
 		// publicメンバ関数
 		// コンストラクタ・デストラクタ
@@ -39,11 +36,13 @@ class CMainWindow : public CWindow{
 		virtual ~CMainWindow();	// デストラクタ~CMainWindow()
 		// staticメンバ関数
 		static BOOL RegisterClass(HINSTANCE hInstance);	// ウィンドウクラス登録関数RegisterClass.
+		static BOOL RegisterClass(HINSTANCE hInstance, LPCTSTR lpszMenuName);	// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
 		// メンバ関数
 		virtual BOOL Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance);	// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 		virtual int OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);	// ウィンドウの作成が開始された時.
 		virtual void OnDestroy();	// ウィンドウが破棄された時.
-		virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);	// コマンドが発生した時.
+		virtual int OnFileOpen(WPARAM wParam, LPARAM lParam);	// "開く"を選択された時のハンドラ.
+		virtual int OnPlay(WPARAM wParam, LPARAM lParam);	// "再生"ボタンが押された時のハンドラ.
 
 };
 

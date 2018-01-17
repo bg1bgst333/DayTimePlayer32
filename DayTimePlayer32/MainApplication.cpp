@@ -7,7 +7,7 @@
 BOOL CMainApplication::InitInstance(HINSTANCE hInstance, LPTSTR lpCmdLine, int nShowCmd){
 
 	// ウィンドウクラスの登録.
-	CMainWindow::RegisterClass(hInstance);	// CMainWindow::RegisterClassでウィンドウクラス"CMainWindow"を登録.
+	CMainWindow::RegisterClass(hInstance, NULL);	// CMainWindow::RegisterClassでウィンドウクラス"CMainWindow"を登録.
 
 	// CMainWindowオブジェクトの作成.
 	m_pMainWnd = new CMainWindow();	// CMainWindowオブジェクトを作成し, m_pMainWndに格納.

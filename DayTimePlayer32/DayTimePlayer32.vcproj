@@ -185,7 +185,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\c_string_utility.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CustomControl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FileDialog.cpp"
 				>
 			</File>
 			<File
@@ -194,6 +202,14 @@
 			</File>
 			<File
 				RelativePath=".\MainWindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MenuBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MenuWindow.cpp"
 				>
 			</File>
 			<File
@@ -223,7 +239,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\c_string_utility.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CustomControl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FileDialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HandlerConditions.h"
 				>
 			</File>
 			<File
@@ -232,6 +260,14 @@
 			</File>
 			<File
 				RelativePath=".\MainWindow.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MenuBar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MenuWindow.h"
 				>
 			</File>
 			<File

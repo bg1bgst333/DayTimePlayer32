@@ -1,10 +1,11 @@
 // ヘッダのインクルード
 // 独自のヘッダ
 #include "MainWindow.h"	// CMainWindow
+#include "FileDialog.h"	// CFileDialog
 #include "resource.h"		// リソース
 
 // コンストラクタCMainWindow()
-CMainWindow::CMainWindow() : CWindow(){
+CMainWindow::CMainWindow() : CMenuWindow(){
 
 	// メンバの初期化.
 	m_tstrCurrentFileName.clear();	// m_tstrCurrentFileName.clearでクリア.
@@ -21,10 +22,12 @@ CMainWindow::~CMainWindow(){
 	m_tstrCurrentFileName.clear();	// m_tstrCurrentFileName.clearでクリア.
 	m_tstrCurrentFileNameTitle.clear();	// m_tstrCurrentFileName.clearでクリア.
 	if (m_pStatic != NULL){	// m_pStaticがNULLでなければ.
+		DestroyWindow(m_pStatic->m_hWnd);	// DestroyWindowでm_pStatic->m_hWndを破棄.
 		delete m_pStatic;	// deleteでm_pStaticを解放.
 		m_pStatic = NULL;	// m_pStaticにNULLをセット.
 	}
 	if (m_pButton != NULL){	// m_pButtonがNULLでなければ.
+		DestroyWindow(m_pButton->m_hWnd);	// DestroyWindowでm_pStatic->m_hWndを破棄.
 		delete m_pButton;	// deleteでm_pButtonを解放.
 		m_pButton = NULL;	// m_pButtonにNULLをセット.
 	}
@@ -39,6 +42,14 @@ BOOL CMainWindow::RegisterClass(HINSTANCE hInstance){
 
 }
 
+// ウィンドウクラス登録関数RegisterClass.(メニュー名指定バージョン.)
+BOOL CMainWindow::RegisterClass(HINSTANCE hInstance, LPCTSTR lpszMenuName){
+
+	// ウィンドウプロシージャにはCWindow::StaticWndowProc, メニューlpszMenuNameを使う.
+	return CMenuWindow::RegisterClass(hInstance, _T("CMainWindow"), lpszMenuName);	// メニュー名を指定する.
+
+}
+
 // ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, int iWidth, int iHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance){// ウィンドウ作成関数Create.(ウィンドウクラス名省略バージョン.)
 
@@ -49,6 +60,15 @@ BOOL CMainWindow::Create(LPCTSTR lpctszWindowName, DWORD dwStyle, int x, int y, 
 
 // ウィンドウの作成が開始された時.
 int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
+
+	// メニューバーの作成.
+	m_pMenuBar = new CMenuBar(hwnd);	// CMenuBarオブジェクトm_pMenuBarを作成.
+
+	// メニューのロード.
+	m_pMenuBar->LoadMenu(lpCreateStruct->hInstance, IDR_MENU1);	// LoadMenuでIDR_MENU1をロード.
+
+	// メニューのセット.
+	m_pMenuBar->SetMenu(hwnd);	// SetMenuでhwndにメニューをセット.
 
 	// スタティックコントロールオブジェクトの作成
 	m_pStatic = new CStatic();	// CStaticオブジェクトの作成.
@@ -62,6 +82,12 @@ int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 	// ボタンコントロールのウィンドウ作成.
 	m_pButton->Create(_T("再生"), BS_PUSHBUTTON, 0, 50, 100, 50, hwnd, (HMENU)(WM_APP + 2), lpCreateStruct->hInstance);	// m_pButton->Createで作成.
 
+	// メニューハンドラの追加.
+	AddCommandHandler(ID_FILE_OPEN, 0, (int(CWindow::*)(WPARAM, LPARAM))&CMainWindow::OnFileOpen);	// AddCommandHandlerでID_FILE_OPENに対するハンドラCMainWindow::OnFileOpenを登録.
+
+	// ボタンハンドラの追加.
+	AddCommandHandler(WM_APP + 2, BN_CLICKED, (int(CWindow::*)(WPARAM, LPARAM))&CMainWindow::OnPlay);	// AddCommandHandlerでWM_APP + 2に対するハンドラCMainWindow::OnPlayを登録.
+
 	// 常にウィンドウ作成に成功するものとする.
 	return 0;	// 0を返すと, ウィンドウ作成に成功したということになる.
 
@@ -70,82 +96,61 @@ int CMainWindow::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct){
 // ウィンドウが破棄された時.
 void CMainWindow::OnDestroy(){
 
-	// 終了メッセージの送信.
-	PostQuitMessage(0);	// PostQuitMessageで終了コードを0としてWM_QUITメッセージを送信.
+	// 子ウィンドウオブジェクトの破棄.
+	if (m_pStatic != NULL){	// m_pStaticがNULLでなければ.
+		DestroyWindow(m_pStatic->m_hWnd);	// DestroyWindowでm_pStatic->m_hWndを破棄.
+		delete m_pStatic;	// deleteでm_pStaticを解放.
+		m_pStatic = NULL;	// m_pStaticにNULLをセット.
+	}
+	if (m_pButton != NULL){	// m_pButtonがNULLでなければ.
+		DestroyWindow(m_pButton->m_hWnd);	// DestroyWindowでm_pStatic->m_hWndを破棄.
+		delete m_pButton;	// deleteでm_pButtonを解放.
+		m_pButton = NULL;	// m_pButtonにNULLをセット.
+	}
+
+	// 親ウィンドウのOnDestroyを呼ぶ.
+	CMenuWindow::OnDestroy();	// CMenuWindow::OnDestroyを呼ぶ.
 
 }
 
-// コマンドが発生した時.
-BOOL CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam){
+// "開く"を選択された時のハンドラ.
+int CMainWindow::OnFileOpen(WPARAM wParam, LPARAM lParam){
 
-	// コマンドの処理.
-	switch (LOWORD(wParam)){	// LOWORD(wParam)でリソースIDがわかるので, その値ごとに処理を振り分ける.
+	// "開く"ファイルの選択.
+	CFileDialog selDlg(NULL, _T("wav"), _T("音声ファイル(*.wav)|*.wav|すべてのファイル(*.*)|*.*||"), OFN_FILEMUSTEXIST);	// CFileDialogオブジェクトselDlgを定義.
+	if (selDlg.ShowOpenFileDialog(m_hWnd)){	// selDlg.ShowOpenFileDialogで"開く"ファイルダイアログを表示.
+		
+		// 選択されたファイル名を表示.
+		m_tstrCurrentFileName = selDlg.m_tstrPath;	// m_tstrCurrentFileNameにselDlg.m_tstrPathをセット.
+		TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
+		GetFileTitle(selDlg.m_tstrPath.c_str(), tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
+		m_tstrCurrentFileNameTitle = tszTitle;	// m_tstrCurrentFileNameTitleにtszTitleをセット.
+		m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
+		InvalidateRect(m_hWnd, NULL, TRUE);	// InvalidateRectで更新.
 
-		// "開く(&O)..."
-		case ID_FILE_OPEN:
+		// 処理したので0を返す.
+		return 0;	// 0を返す.
 
-			// ID_FILE_OPENブロック
-			{
+	}
+	else{	// キャンセルの場合.
 
-				// "開く"ファイルの選択.
-				// 構造体・配列の初期化.
-				OPENFILENAME ofn = {0};	// OPENFILENAME構造体ofnを{0}で初期化.
-				TCHAR tszPath[_MAX_PATH] = {0};	// ファイルパスtszPathを{0}で初期化.
-				// パラメータのセット.
-				ofn.lStructSize = sizeof(OPENFILENAME);	// sizeofでOPENFILENAME構造体のサイズをセット.
-				ofn.hwndOwner = m_hWnd;	// m_hWndをセット.
-				ofn.lpstrFilter = _T("音声ファイル(*.wav)\0*.wav\0すべてのファイル(*.*)\0*.*\0\0");	// 音声ファイルとすべてのファイルのフィルタをセット.
-				ofn.lpstrFile = tszPath;	// tszPathをセット.
-				ofn.nMaxFile = _MAX_PATH;	// _MAX_PATHをセット.
-				ofn.Flags = OFN_FILEMUSTEXIST;	// ファイルが存在しないと抜けられない.
-				// "開く"ファイルダイアログの表示.
-				BOOL bRet = GetOpenFileName(&ofn);	// GetOpenFileNameでファイルダイアログを表示し, 選択されたファイル名を取得する.(戻り値をbRetに格納.)
-				if (bRet){	// 正常に選択された.
-					
-					// 選択されたファイル名を表示.
-					m_tstrCurrentFileName = tszPath;	// m_tstrCurrentFileNameにtszPathをセット.
-					TCHAR tszTitle[_MAX_PATH] = {0};	// ファイル名のタイトル(ファイル名部分のみ.)tszTitleを{0}で初期化.
-					GetFileTitle(tszPath, tszTitle, _MAX_PATH);	// GetFileTitleでタイトルを取得.
-					m_tstrCurrentFileNameTitle = tszTitle;	// m_tstrCurrentFileNameTitleにtszTitleをセット.
-					m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
-					InvalidateRect(m_hWnd, NULL, TRUE);	// InvalidateRectで更新.
-
-				}
-				else{	// キャンセルの場合.
-
-					// 元のタイトルを表示.
-					m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
-
-				}
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// "再生"ボタン
-		case WM_APP + 2:
-
-			// WM_APP + 2ブロック
-			{
-
-				// 選択された音声ファイルを再生.
-				PlaySound(m_tstrCurrentFileName.c_str(), NULL, SND_FILENAME | SND_ASYNC);	// PlaySoundでm_tstrCurrentFileNameを再生.
-
-			}
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
-
-		// それ以外.
-		default:
-
-			// 既定の処理へ向かう.
-			break;	// breakで抜けて, 既定の処理(DefWindowProc)へ向かう.
+		// 元のタイトルを表示.
+		m_pStatic->SetText(m_tstrCurrentFileNameTitle.c_str());	// m_pStatic->SetTextでm_tstrCurrentFileNameTitleをセット.
 
 	}
 
-	// TRUE.
-	return TRUE;	// TRUEを返す.
+	// 処理していないので-1.
+	return -1;	// returnで-1を返す.
+
+}
+
+// "再生"ボタンが押された時のハンドラ.
+int CMainWindow::OnPlay(WPARAM wParam, LPARAM lParam){
+
+	// 選択された音声ファイルを再生.
+	PlaySound(m_tstrCurrentFileName.c_str(), NULL, SND_FILENAME | SND_ASYNC);	// PlaySoundでm_tstrCurrentFileNameを再生.
+
+	// 処理したので0を返す.
+	return 0;	// 0を返す.
 
 }
