@@ -43,6 +43,17 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                }
+            }
         }
         "Release"
         {
@@ -59,6 +70,17 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                }
+            }
         }
     }
     "Deployable"
@@ -166,14 +188,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:DayTimePlayer"
-        "ProductCode" = "8:{A3E948F8-93D0-49C1-BB25-CF46ABAAFE85}"
-        "PackageCode" = "8:{E6D3E9B5-26DB-4216-B3E1-1FBCF3E2483B}"
+        "ProductCode" = "8:{CED39777-3332-47B1-A07D-1B772D2A4C0E}"
+        "PackageCode" = "8:{27B9EA88-5DED-4A90-9BF9-01EB308BEAF5}"
         "UpgradeCode" = "8:{6715A88C-886F-4FA8-B7F7-97F362055A77}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.0"
+        "ProductVersion" = "8:0.0.1"
         "Manufacturer" = "8:B.G-STATION"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
